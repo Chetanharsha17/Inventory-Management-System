@@ -1,0 +1,115 @@
+import tkinter as tk
+from tkinter import messagebox
+
+class InventoryManager:
+    def __init__(self):
+        self.products = {}
+
+    def add_product(self, product_id, name, quantity, price):
+        if product_id in self.products:
+            return f"Product ID {product_id} already exists."
+        self.products[product_id] = {
+            "name": name,
+            "quantity": quantity,
+            "price": price
+        }
+        return f"Product {name} added successfully."
+
+    def edit_product(self, product_id, name=None, quantity=None, price=None):
+        if product_id not in self.products:
+            return f"Product ID {product_id} not found."
+        if name:
+            self.products[product_id]["name"] = name
+        if quantity is not None:
+            self.products[product_id]["quantity"] = quantity
+        if price is not None:
+            self.products[product_id]["price"] = price
+        return f"Product ID {product_id} updated successfully."
+
+    def delete_product(self, product_id):
+        if product_id in self.products:
+            del self.products[product_id]
+            return f"Product ID {product_id} deleted successfully."
+        return f"Product ID {product_id} not found."
+
+    def low_stock_alert(self, threshold=10):
+        low_stock = [pid for pid, details in self.products.items() if details["quantity"] < threshold]
+        return low_stock if low_stock else "No low-stock products."
+
+    def generate_report(self):
+        return self.products
+
+class InventoryApp:
+    def __init__(self, root):
+        self.manager = InventoryManager()
+        self.root = root
+        self.root.title("Inventory Management System")
+
+        # Widgets for product management
+        tk.Label(root, text="Product ID:").grid(row=0, column=0)
+        self.product_id = tk.Entry(root)
+        self.product_id.grid(row=0, column=1)
+
+        tk.Label(root, text="Name:").grid(row=1, column=0)
+        self.product_name = tk.Entry(root)
+        self.product_name.grid(row=1, column=1)
+
+        tk.Label(root, text="Quantity:").grid(row=2, column=0)
+        self.product_quantity = tk.Entry(root)
+        self.product_quantity.grid(row=2, column=1)
+
+        tk.Label(root, text="Price:").grid(row=3, column=0)
+        self.product_price = tk.Entry(root)
+        self.product_price.grid(row=3, column=1)
+
+        tk.Button(root, text="Add Product", command=self.add_product).grid(row=4, column=0)
+        tk.Button(root, text="Edit Product", command=self.edit_product).grid(row=4, column=1)
+        tk.Button(root, text="Delete Product", command=self.delete_product).grid(row=5, column=0)
+        tk.Button(root, text="Low Stock Alert", command=self.low_stock_alert).grid(row=5, column=1)
+        tk.Button(root, text="Generate Report", command=self.generate_report).grid(row=6, column=0, columnspan=2)
+
+    def add_product(self):
+        pid = self.product_id.get()
+        name = self.product_name.get()
+        try:
+            quantity = int(self.product_quantity.get())
+            price = float(self.product_price.get())
+        except ValueError:
+            messagebox.showerror("Error", "Quantity and Price must be valid numbers.")
+            return
+        message = self.manager.add_product(pid, name, quantity, price)
+        messagebox.showinfo("Info", message)
+
+    def edit_product(self):
+        pid = self.product_id.get()
+        name = self.product_name.get() or None
+        quantity = self.product_quantity.get()
+        price = self.product_price.get()
+        try:
+            quantity = int(quantity) if quantity else None
+            price = float(price) if price else None
+        except ValueError:
+            messagebox.showerror("Error", "Quantity and Price must be valid numbers.")
+            return
+        message = self.manager.edit_product(pid, name, quantity, price)
+        messagebox.showinfo("Info", message)
+
+    def delete_product(self):
+        pid = self.product_id.get()
+        message = self.manager.delete_product(pid)
+        messagebox.showinfo("Info", message)
+
+    def low_stock_alert(self):
+        threshold = 10  # Default threshold
+        low_stock = self.manager.low_stock_alert(threshold)
+        messagebox.showinfo("Low Stock Alert", str(low_stock))
+
+    def generate_report(self):
+        report = self.manager.generate_report()
+        report_str = "\n".join([f"ID: {pid}, Name: {details['name']}, Qty: {details['quantity']}, Price: {details['price']}" for pid, details in report.items()])
+        messagebox.showinfo("Inventory Report", report_str or "No products in inventory.")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = InventoryApp(root)
+    root.mainloop()
